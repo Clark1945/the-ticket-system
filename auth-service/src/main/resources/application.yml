@@ -1,0 +1,78 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auth_db
+    username: ${DB_USERNAME:auth_user}
+    password: ${DB_PASSWORD:auth_pass}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope: openid, profile, email
+            redirect-uri: "{baseUrl}/auth/oauth2/google/callback"
+          line:
+            client-id: ${LINE_CLIENT_ID}
+            client-secret: ${LINE_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            scope: profile, openid, email
+            redirect-uri: "{baseUrl}/auth/oauth2/line/callback"
+          github:
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
+            scope: read:user, user:email
+            redirect-uri: "{baseUrl}/auth/oauth2/github/callback"
+        provider:
+          line:
+            authorization-uri: https://access.line.me/oauth2/v2.1/authorize
+            token-uri: https://api.line.me/oauth2/v2.1/token
+            user-info-uri: https://api.line.me/v2/profile
+            user-name-attribute: userId
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-expiry: 1800    # 30 minutes (seconds)
+    refresh-token-expiry: 604800  # 7 days (seconds)
+  bff:
+    redirect-url: ${BFF_REDIRECT_URL:http://localhost:3000}
+  otp:
+    ttl: 600    # 10 minutes (seconds)
+    length: 6

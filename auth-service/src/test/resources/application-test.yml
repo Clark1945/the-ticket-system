@@ -1,0 +1,45 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+  flyway:
+    enabled: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  mail:
+    host: localhost
+    port: 1025
+    username: test@test.com
+    password: test
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-google-id
+            client-secret: test-google-secret
+          line:
+            client-id: test-line-id
+            client-secret: test-line-secret
+          github:
+            client-id: test-github-id
+            client-secret: test-github-secret
+
+app:
+  jwt:
+    secret: test-secret-key-at-least-32-characters-long
+    access-token-expiry: 1800
+    refresh-token-expiry: 604800
+  bff:
+    redirect-url: http://localhost:3000
+  otp:
+    ttl: 600
+    length: 6

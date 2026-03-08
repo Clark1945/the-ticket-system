@@ -1,0 +1,16 @@
+spring:
+  cloud:
+    gateway:
+      routes: []
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+app:
+  jwt:
+    secret: test-secret-key-for-unit-testing-only-must-be-long-enough
+  rate-limit:
+    max-requests: 60
+    window-seconds: 60

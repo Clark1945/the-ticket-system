@@ -1,17 +1,62 @@
-# Api Gateway
-
+# API Gateway
 
 ## Purpose
-- BFF
-- Entry for web accessibility through BFF
-- Manage/store user JWT
+- Single entry point for all client requests
+- Route requests to downstream services
+- Verify JWT for protected routes
 
 ## Tech Stack
-- Use Java Spring Cloud Gateway for routing and JWT authentication
+- Java Spring Cloud Gateway (Use Java 17 Spring Boot 3 Maven)
+- Redis
+- ELK Stack
 
-## Details
-- POST /auth/merchant/register  → Do not verify JWT
-- POST /auth/merchant/login     → Do not verify JWT
-- POST /auth/merchant/email-verify → Do not verify JWT
-- GET  /auth/oauth2/{provider}  → Do not verify JWT
-- GET  /auth/oauth2/{provider}/callback → Do not verify JWT
+## Port
+- API Gateway: 8080
+- Auth Service: 8081
+
+## Routing
+| Path      | Destination           |
+|-----------|-----------------------|
+| /auth/**  | http://localhost:8081 |
+| /app/**   | http://localhost:8090 |
+
+## JWT Whitelist (No verification required)
+POST /auth/merchant/register
+POST /auth/merchant/login
+POST /auth/merchant/otp/resend
+POST /auth/merchant/email-verify
+GET  /auth/oauth2/{provider}
+GET  /auth/oauth2/{provider}/callback
+
+## Cross-Cutting Concerns
+- Rate Limiting: 60 requests/min per IP (Redis Sliding Window Log)
+- Request Logging: method, path, status, latency (api_call_log save to ELK)
+- Request Timeout: 5s per downstream service
+- Error Response Format: { code, message, timestamp }
+  - code: string e.g. "TOKEN_INVALID", "RATE_LIMIT_EXCEEDED"
+  - timestamp: ISO 8601 e.g. "2026-03-07T10:00:00Z"
+  - HTTP 429 when rate limit exceeded
+
+## Api call log
+- timestamp    → timestamp
+- method       → GET / POST
+- path         → /auth/merchant/login
+- status       → 200 / 401 / 404
+- latency      → 100ms
+- ip_address   → 127.0.0.1
+
+## JWT Process after verification
+- get actor_id, actor_type from JWT payload(Stored in cookie)
+- Add them into Request Header (X-Actor-Id, X-Actor-Type)
+- Send request to downstream service
+
+## Redis
+- key: rate_limit:{ip}
+- ZSET Score: timestamp
+- ZSET Value: request_id
+- LRU mechanism while Redis Rate Limiting
+
+## Future Improvements
+- Circuit Breaker (Resilience4j)
+- API Versioning (/v1/**)
+- Health Check (/actuator/health)

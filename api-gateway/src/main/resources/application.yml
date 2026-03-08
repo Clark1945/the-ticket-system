@@ -1,0 +1,30 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/auth/**
+        - id: app-service
+          uri: http://localhost:8090
+          predicates:
+            - Path=/app/**
+      httpclient:
+        connect-timeout: 5000   # ms
+        response-timeout: 5s
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+  rate-limit:
+    max-requests: 60
+    window-seconds: 60

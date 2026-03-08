@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification - Ticket System</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); padding: 2rem; width: 100%; max-width: 420px; text-align: center; }
+        h1 { font-size: 1.6rem; margin-bottom: 0.75rem; color: #333; }
+        .subtitle { color: #666; font-size: 0.95rem; margin-bottom: 0.3rem; }
+        .email-display { font-weight: 600; color: #333; margin-bottom: 1.5rem; }
+        .form-group { margin-bottom: 1rem; text-align: left; }
+        label { display: block; font-size: 0.9rem; font-weight: 600; color: #555; margin-bottom: 0.3rem; }
+        input[type="text"] {
+            width: 100%; padding: 0.6rem 0.8rem; border: 1px solid #ccc; border-radius: 4px;
+            font-size: 1.4rem; letter-spacing: 0.3rem; text-align: center;
+        }
+        input:focus { outline: none; border-color: #4a90e2; box-shadow: 0 0 0 2px rgba(74,144,226,0.2); }
+        button[type="submit"] {
+            width: 100%; padding: 0.75rem; background: #4a90e2; color: #fff; border: none;
+            border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 0.5rem;
+        }
+        button[type="submit"]:hover { background: #357abd; }
+        .alert-error   { background: #fdecea; color: #c62828; border: 1px solid #f5c6c6; border-radius: 4px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.9rem; text-align: left; }
+        .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; border-radius: 4px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.9rem; text-align: left; }
+        .resend-section { margin-top: 1.5rem; border-top: 1px solid #eee; padding-top: 1rem; }
+        .resend-section p { font-size: 0.9rem; color: #666; margin-bottom: 0.75rem; }
+        .btn-resend {
+            padding: 0.5rem 1.25rem; background: #fff; color: #4a90e2; border: 1px solid #4a90e2;
+            border-radius: 4px; font-size: 0.9rem; cursor: pointer;
+        }
+        .btn-resend:hover { background: #f0f7ff; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>Verify Your Email</h1>
+    <p class="subtitle">We sent a 6-digit OTP to</p>
+    <p class="email-display" th:text="${maskedEmail}">ma***@example.com</p>
+
+    <div class="alert-error" th:if="${error}" th:text="${error}"></div>
+    <div class="alert-success" th:if="${param.resent}">OTP has been resent to your email.</div>
+    <div class="alert-error" th:if="${param.error}" th:text="${param.error}"></div>
+
+    <!-- OTP submit form -->
+    <form th:action="@{/app/merchant/email-verify/{action}(action=${action})}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <input type="hidden" name="email" th:value="${email}"/>
+
+        <div class="form-group">
+            <label for="otp">Enter OTP</label>
+            <input type="text" id="otp" name="otp" maxlength="6" placeholder="------"
+                   autocomplete="one-time-code" required autofocus />
+        </div>
+
+        <button type="submit">Verify</button>
+    </form>
+
+    <!-- Resend OTP form -->
+    <div class="resend-section">
+        <p>Didn't receive the code?</p>
+        <form th:action="@{/app/merchant/otp/resend}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <input type="hidden" name="email" th:value="${email}"/>
+            <button type="submit" class="btn-resend">Resend OTP</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Home - Ticket System</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; min-height: 100vh; }
+        header { background: #2e7d32; color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.3rem; }
+        .logout-btn {
+            padding: 0.4rem 1rem; background: rgba(255,255,255,0.2); color: #fff;
+            border: 1px solid rgba(255,255,255,0.5); border-radius: 4px; font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,0.35); }
+        main { max-width: 800px; margin: 3rem auto; padding: 0 1rem; }
+        .welcome-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 2rem; }
+        .welcome-card h2 { font-size: 1.5rem; color: #333; margin-bottom: 0.5rem; }
+        .welcome-card p  { color: #666; font-size: 1rem; }
+        .info-row { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee; display: flex; gap: 2rem; }
+        .info-item label { font-size: 0.8rem; color: #999; display: block; margin-bottom: 0.2rem; text-transform: uppercase; letter-spacing: 0.05rem; }
+        .info-item span  { font-size: 1rem; color: #333; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Ticket System &mdash; User Portal</h1>
+    <form th:action="@{/app/user/logout}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button type="submit" class="logout-btn">Logout</button>
+    </form>
+</header>
+
+<main>
+    <div class="welcome-card">
+        <h2>Welcome, <span th:text="${actorName}">User</span>!</h2>
+        <p>You are logged in to the User Portal.</p>
+        <div class="info-row">
+            <div class="info-item">
+                <label>Email</label>
+                <span th:text="${email}">user@example.com</span>
+            </div>
+            <div class="info-item">
+                <label>Role</label>
+                <span>User</span>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

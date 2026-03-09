@@ -27,9 +27,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            // stateless API, do not use HttpSession, use JWT Token instead
             .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/auth/merchant/register",
@@ -42,14 +42,12 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
-                .authorizationEndpoint(endpoint ->
-                    endpoint.baseUri("/auth/oauth2"))
-                .redirectionEndpoint(endpoint ->
-                    endpoint.baseUri("/auth/oauth2/*/callback"))
-                .userInfoEndpoint(userInfo ->
-                    userInfo.userService(oAuth2UserService))
+                    .authorizationEndpoint(endpoint -> endpoint.baseUri("/auth/oauth2"))
+                    .redirectionEndpoint(endpoint -> endpoint.baseUri("/auth/oauth2/*/callback"))
+                    .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService))
                 .successHandler(oAuth2SuccessHandler)
             )
+            // Add Custom JWT Filter
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -4,6 +4,7 @@ import com.ticketsystem.auth.dto.response.ApiResponse;
 import com.ticketsystem.auth.dto.response.MeResponse;
 import com.ticketsystem.auth.entity.AppUser;
 import com.ticketsystem.auth.entity.Merchant;
+import com.ticketsystem.auth.enums.ActorType;
 import com.ticketsystem.auth.exception.BusinessException;
 import com.ticketsystem.auth.exception.ErrorCode;
 import com.ticketsystem.auth.repository.AppUserRepository;
@@ -37,7 +38,7 @@ public class MeController {
         Long actorId = Long.parseLong(parts[0]);
         String actorType = parts[1];
 
-        if ("MERCHANT".equals(actorType)) {
+        if (ActorType.MERCHANT.name().equals(actorType)) {
             Merchant merchant = merchantRepository.findById(actorId)
                     .orElseThrow(() -> BusinessException.notFound(ErrorCode.MERCHANT_NOT_FOUND));
             return ResponseEntity.ok(ApiResponse.ok(

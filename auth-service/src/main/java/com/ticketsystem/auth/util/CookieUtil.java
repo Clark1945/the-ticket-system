@@ -21,7 +21,7 @@ public class CookieUtil {
         return ResponseCookie.from("refresh_token", token)
                 .httpOnly(true)
                 .secure(false) // set true in production (HTTPS)
-                .path("/auth/token/refresh")
+                .path("/auth/token/refresh") // attach on a specific path, change browser action
                 .maxAge(maxAgeSeconds)
                 .sameSite("Strict")
                 .build();
@@ -31,7 +31,7 @@ public class CookieUtil {
         return ResponseCookie.from("access_token", "")
                 .httpOnly(true)
                 .secure(false)
-                .path("/")
+                .path("/") // attach on all path, change browser action
                 .maxAge(0)
                 .sameSite("Strict")
                 .build();

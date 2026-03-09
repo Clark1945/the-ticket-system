@@ -14,7 +14,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -33,9 +32,6 @@ public class CommonAuthService {
     private final MerchantRefreshTokenRepository merchantRefreshTokenRepo;
     private final UserRefreshTokenRepository userRefreshTokenRepo;
     private final AuditLogService auditLogService;
-
-    @Value("${app.jwt.refresh-token-expiry}")
-    private long refreshTokenExpiry;
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
         String accessToken = extractCookie(request, "access_token");
@@ -102,7 +98,7 @@ public class CommonAuthService {
 
             String newRefreshToken = jwtService.generateRefreshToken(actorId, actorType);
             stored.setRefreshToken(newRefreshToken);
-            stored.setExpiresAt(LocalDateTime.now().plusSeconds(refreshTokenExpiry));
+            stored.setExpiresAt(LocalDateTime.now().plusSeconds(jwtService.getRefreshTokenExpiry()));
             merchantRefreshTokenRepo.save(stored);
 
             String newAccessToken = jwtService.generateAccessToken(actorId, actorType);
@@ -119,7 +115,7 @@ public class CommonAuthService {
 
             String newRefreshToken = jwtService.generateRefreshToken(actorId, actorType);
             stored.setRefreshToken(newRefreshToken);
-            stored.setExpiresAt(LocalDateTime.now().plusSeconds(refreshTokenExpiry));
+            stored.setExpiresAt(LocalDateTime.now().plusSeconds(jwtService.getRefreshTokenExpiry()));
             userRefreshTokenRepo.save(stored);
 
             String newAccessToken = jwtService.generateAccessToken(actorId, actorType);
@@ -134,7 +130,7 @@ public class CommonAuthService {
         response.addHeader(HttpHeaders.SET_COOKIE,
                 CookieUtil.createAccessTokenCookie(accessToken, jwtService.getAccessTokenExpiry()).toString());
         response.addHeader(HttpHeaders.SET_COOKIE,
-                CookieUtil.createRefreshTokenCookie(refreshToken, refreshTokenExpiry).toString());
+                CookieUtil.createRefreshTokenCookie(refreshToken, jwtService.getRefreshTokenExpiry()).toString());
     }
 
     private String extractCookie(HttpServletRequest request, String name) {

@@ -34,7 +34,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                if (Boolean.TRUE.equals(redisTemplate.hasKey("blacklist:" + token))) {
+                // when user logout but access_token still valid
+                if (redisTemplate.hasKey("blacklist:" + token)) {
                     chain.doFilter(request, response);
                     return;
                 }
@@ -42,9 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Claims claims = jwtService.validateAndParseClaims(token);
                 String principal = claims.getSubject() + ":" + claims.get("actor_type", String.class);
 
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                        principal, null, Collections.emptyList()
-                );
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(principal, null, Collections.emptyList());
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(auth);
 

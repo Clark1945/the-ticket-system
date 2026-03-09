@@ -26,6 +26,7 @@ POST /auth/merchant/otp/resend              body: { email }
 ### Common API
 POST /auth/logout
 POST /auth/token/refresh
+GET  /auth/me                               requires: access_token cookie
 
 ## Token Strategy
 - Delivery: Set-Cookie (HttpOnly, SameSite=Strict)
@@ -147,6 +148,18 @@ BFF -> POST /auth/merchant/login (validate credentials, send OTP)
 -> POST /auth/merchant/email-verify/LOGIN (validate OTP)
 -> Auth Service issues JWT (access_token + refresh_token)
 -> Redirect to BFF index page
+
+### Get Current Actor Flow
+BFF -> GET /auth/me (帶 access_token cookie)
+-> Auth Service 解析 JWT，查詢 DB 回傳使用者資訊
+Response:
+{
+  "actorId": 1,
+  "actorType": "MERCHANT" | "USER",
+  "actorName": "...",
+  "email": "..."
+}
+用途：Frontend BFF 在 OAuth2 callback 後呼叫，取得使用者資訊以建立 Redis Session
 
 ### Logout Flow
 BFF -> POST /auth/logout

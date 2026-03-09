@@ -18,15 +18,13 @@ public class CommonAuthController {
     private final CommonAuthService commonAuthService;
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(
-            HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request, HttpServletResponse response) {
         commonAuthService.logout(request, response);
         return ResponseEntity.ok(ApiResponse.ok("Logged out successfully."));
     }
 
     @PostMapping("/token/refresh")
-    public ResponseEntity<ApiResponse<Void>> refreshToken(
-            HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<Void>> refreshToken(HttpServletRequest request, HttpServletResponse response) {
         commonAuthService.refreshToken(request, response);
         return ResponseEntity.ok(ApiResponse.ok("Token refreshed."));
     }

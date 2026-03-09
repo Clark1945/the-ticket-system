@@ -17,4 +17,4 @@ spring:
     cache: false
 
 app:
-  auth-service-url: http://localhost:8081
+  auth-service-url: http://localhost:8080

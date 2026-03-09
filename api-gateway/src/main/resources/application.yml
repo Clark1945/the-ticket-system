@@ -9,14 +9,6 @@ spring:
           uri: http://localhost:8081
           predicates:
             - Path=/auth/**
-        - id: app-service
-          uri: http://localhost:8090
-          predicates:
-            - Path=/app/**
-        - id: app-static
-          uri: http://localhost:8090
-          predicates:
-            - Path=/images/**
       httpclient:
         connect-timeout: 5000   # ms
         response-timeout: 5s

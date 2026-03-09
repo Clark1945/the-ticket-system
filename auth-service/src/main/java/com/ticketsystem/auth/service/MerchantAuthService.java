@@ -17,7 +17,6 @@ import com.ticketsystem.auth.util.CookieUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,9 +36,6 @@ public class MerchantAuthService {
     private final EmailService emailService;
     private final AuditLogService auditLogService;
     private final PasswordEncoder passwordEncoder;
-
-    @Value("${app.jwt.refresh-token-expiry}")
-    private long refreshTokenExpiry;
 
     public void register(MerchantRegisterRequest request) {
         if (merchantRepository.existsByEmail(request.email())) {
@@ -96,8 +92,7 @@ public class MerchantAuthService {
             merchantRepository.save(merchant);
         } else {
             issueTokens(merchant, response);
-            auditLogService.log(merchant.getId(), ActorType.MERCHANT, AuditAction.LOGIN,
-                    httpRequest.getRemoteAddr(), null);
+            auditLogService.log(merchant.getId(), ActorType.MERCHANT, AuditAction.LOGIN, httpRequest.getRemoteAddr(), null);
         }
     }
 
@@ -130,12 +125,12 @@ public class MerchantAuthService {
         MerchantRefreshToken token = new MerchantRefreshToken();
         token.setMerchant(merchant);
         token.setRefreshToken(refreshToken);
-        token.setExpiresAt(LocalDateTime.now().plusSeconds(refreshTokenExpiry));
+        token.setExpiresAt(LocalDateTime.now().plusSeconds(jwtService.getRefreshTokenExpiry()));
         refreshTokenRepository.save(token);
 
         response.addHeader(HttpHeaders.SET_COOKIE,
                 CookieUtil.createAccessTokenCookie(accessToken, jwtService.getAccessTokenExpiry()).toString());
         response.addHeader(HttpHeaders.SET_COOKIE,
-                CookieUtil.createRefreshTokenCookie(refreshToken, refreshTokenExpiry).toString());
+                CookieUtil.createRefreshTokenCookie(refreshToken, jwtService.getRefreshTokenExpiry()).toString());
     }
 }

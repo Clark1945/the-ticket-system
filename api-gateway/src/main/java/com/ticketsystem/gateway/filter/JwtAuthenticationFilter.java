@@ -15,7 +15,6 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
@@ -24,7 +23,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -46,21 +44,11 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                     "/auth/merchant/login",
                     "/auth/merchant/otp/resend",
                     "/auth/merchant/email-verify/**",
-                    "/auth/token/refresh",
-                    "/app/merchant/register",
-                    "/app/merchant/login",
-                    "/app/merchant/email-verify/**",
-                    "/app/merchant/otp/resend",
-                    "/app/user/login"
+                    "/auth/token/refresh"
             ),
             "GET", List.of(
                     "/auth/oauth2/**",
-                    "/app/merchant/login",
-                    "/app/merchant/register",
-                    "/app/merchant/email-verify",
-                    "/app/user/login",
-                    "/app/oauth2/callback",
-                    "/images/**"
+                    "/auth/me"
             )
     );
 
@@ -89,7 +77,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         }
 
         // token missing, invalid, or expired with no refresh_token
-        return redirectToLogin(exchange, request.getPath().value());
+        return writeError(exchange, HttpStatus.UNAUTHORIZED, "TOKEN_INVALID", "Missing or invalid token");
     }
 
     private Mono<Void> processValidToken(ServerWebExchange exchange, GatewayFilterChain chain,
@@ -97,7 +85,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         return redisTemplate.hasKey("blacklist:" + token)
                 .flatMap(blacklisted -> {
                     if (Boolean.TRUE.equals(blacklisted)) {
-                        return redirectToLogin(exchange, exchange.getRequest().getPath().value());
+                        return writeError(exchange, HttpStatus.UNAUTHORIZED, "TOKEN_INVALID", "Missing or invalid token");
                     }
                     try {
                         Claims claims = jwtService.validateAndParseClaims(token);
@@ -107,7 +95,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                                 .build();
                         return chain.filter(exchange.mutate().request(mutated).build());
                     } catch (Exception e) {
-                        return redirectToLogin(exchange, exchange.getRequest().getPath().value());
+                        return writeError(exchange, HttpStatus.UNAUTHORIZED, "TOKEN_INVALID", "Missing or invalid token");
                     }
                 });
     }
@@ -131,7 +119,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                     // Extract new access_token to continue current request
                     String newAccessToken = extractTokenFromSetCookie(setCookieHeaders);
                     if (newAccessToken == null) {
-                        return redirectToLogin(exchange, originalPath);
+                        return writeError(exchange, HttpStatus.UNAUTHORIZED, "TOKEN_INVALID", "Missing or invalid token");
                     }
 
                     try {
@@ -143,27 +131,13 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                         log.info("Token refreshed transparently for path: {}", originalPath);
                         return chain.filter(exchange.mutate().request(mutated).build());
                     } catch (Exception e) {
-                        return redirectToLogin(exchange, originalPath);
+                        return writeError(exchange, HttpStatus.UNAUTHORIZED, "TOKEN_INVALID", "Missing or invalid token");
                     }
                 })
                 .onErrorResume(e -> {
                     log.warn("Token refresh failed: {}", e.getMessage());
-                    return redirectToLogin(exchange, originalPath);
+                    return writeError(exchange, HttpStatus.UNAUTHORIZED, "TOKEN_INVALID", "Missing or invalid token");
                 });
-    }
-
-    private Mono<Void> redirectToLogin(ServerWebExchange exchange, String path) {
-        // API paths return JSON 401
-        if (path.startsWith("/auth/")) {
-            return writeError(exchange, HttpStatus.UNAUTHORIZED,
-                    "TOKEN_INVALID", "Missing or invalid token");
-        }
-        // Frontend paths redirect to appropriate login page
-        String loginUrl = path.startsWith("/app/user/") ? "/app/user/login" : "/app/merchant/login";
-        ServerHttpResponse response = exchange.getResponse();
-        response.setStatusCode(HttpStatus.FOUND);
-        response.getHeaders().setLocation(URI.create(loginUrl));
-        return response.setComplete();
     }
 
     @Override

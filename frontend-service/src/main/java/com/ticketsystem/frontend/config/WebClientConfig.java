@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 public class WebClientConfig {
 
-    @Value("${app.auth-service-url:http://localhost:8081}")
+    @Value("${app.auth-service-url:http://localhost:8080}")
     private String authServiceUrl;
 
     @Bean

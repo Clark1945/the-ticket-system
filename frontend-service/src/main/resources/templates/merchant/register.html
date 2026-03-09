@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Merchant Registration - Ticket System</title>
+    <title th:text="#{merchant.register.title}">Merchant Registration - Ticket System</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
@@ -24,17 +24,29 @@
         .alert-error { background: #fdecea; color: #c62828; border: 1px solid #f5c6c6; border-radius: 4px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.9rem; }
         .footer-link { text-align: center; margin-top: 1rem; font-size: 0.9rem; color: #666; }
         .footer-link a { color: #4a90e2; text-decoration: none; }
+        .logo { display: block; margin: 0 auto 1.2rem; width: 40%; height: 20%; object-fit: contain; }
         .tos { display: flex; align-items: center; gap: 0.5rem; margin: 0.75rem 0; font-size: 0.88rem; color: #555; }
         .tos input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
         .tos a { color: #4a90e2; text-decoration: none; }
         .tos a:hover { text-decoration: underline; }
-        .logo { display: block; margin: 0 auto 1.2rem; width: 40%; height: 20%; object-fit: contain; }
+        .lang-switcher { text-align: center; margin-bottom: 1.2rem; font-size: 0.82rem; }
+        .lang-switcher a { color: #4a90e2; text-decoration: none; margin: 0 0.3rem; }
+        .lang-switcher a:hover { text-decoration: underline; }
+        .lang-switcher span { color: #bbb; margin: 0 0.15rem; }
     </style>
 </head>
 <body>
 <div class="card">
     <img class="logo" th:src="@{/images/icon.png}" alt="Logo" />
-    <h1>Register as merchant</h1>
+    <h1 th:text="#{merchant.register.heading}">Register as Merchant</h1>
+
+    <div class="lang-switcher">
+        <a th:href="@{/app/merchant/register(lang=en)}"    th:text="#{common.lang.en}">English</a>
+        <span>|</span>
+        <a th:href="@{/app/merchant/register(lang=zh_TW)}" th:text="#{common.lang.zh_TW}">繁體中文</a>
+        <span>|</span>
+        <a th:href="@{/app/merchant/register(lang=ja)}"    th:text="#{common.lang.ja}">日本語</a>
+    </div>
 
     <div class="alert-error" th:if="${error}" th:text="${error}"></div>
 
@@ -42,42 +54,54 @@
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
         <div class="form-group">
-            <label for="name">Company Name</label>
-            <input type="text" id="name" name="name" th:value="${form?.name}" placeholder="Your business name" required />
+            <label for="name" th:text="#{merchant.register.name}">Company Name</label>
+            <input type="text" id="name" name="name" th:value="${form?.name}"
+                   th:placeholder="#{merchant.register.name.placeholder}" required />
         </div>
 
         <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" th:value="${form?.email}" placeholder="merchant@example.com" required />
+            <label for="email" th:text="#{merchant.register.email}">Email</label>
+            <input type="email" id="email" name="email" th:value="${form?.email}"
+                   th:placeholder="#{merchant.register.email.placeholder}" required />
         </div>
 
         <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="At least 8 characters" required />
+            <label for="password" th:text="#{merchant.register.password}">Password</label>
+            <input type="password" id="password" name="password"
+                   th:placeholder="#{merchant.register.password.placeholder}" required />
         </div>
 
         <div class="form-group">
-            <label for="address">Address <span class="optional">(optional)</span></label>
-            <input type="text" id="address" name="address" th:value="${form?.address}" placeholder="123 Main St, City" />
+            <label for="address">
+                <span th:text="#{merchant.register.address}">Address</span>
+                <span class="optional" th:text="#{merchant.register.optional}">(optional)</span>
+            </label>
+            <input type="text" id="address" name="address" th:value="${form?.address}"
+                   th:placeholder="#{merchant.register.address.placeholder}" />
         </div>
 
         <div class="form-group">
-            <label for="phone">Phone Number <span class="optional">(optional)</span></label>
+            <label for="phone">
+                <span th:text="#{merchant.register.phone}">Phone Number</span>
+                <span class="optional" th:text="#{merchant.register.optional}">(optional)</span>
+            </label>
             <input type="text" id="phone" name="phone" th:value="${form?.phone}" placeholder="+66 12 345 6789" />
         </div>
 
         <div class="tos">
             <input type="checkbox" id="tos" required />
             <label for="tos" style="font-weight: normal;">
-                I have read and agree to the <a href="https://www.google.com" target="_blank">Terms of Service</a>
+                <span th:text="#{merchant.register.tos}">I have read and agree to the</span>
+                <a href="https://www.google.com" target="_blank" th:text="#{merchant.register.tos.link}">Terms of Service</a>
             </label>
         </div>
 
-        <button type="submit">Register</button>
+        <button type="submit" th:text="#{merchant.register.submit}">Register</button>
     </form>
 
     <div class="footer-link">
-        Already have an account? <a href="/app/merchant/login">Sign in</a>
+        <span th:text="#{merchant.register.have.account}">Already have an account?</span>
+        <a href="/app/merchant/login" th:text="#{merchant.register.signin}">Sign in</a>
     </div>
 </div>
 </body>

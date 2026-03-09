@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Login - Ticket System</title>
+    <title th:text="#{user.login.title}">User Login - Ticket System</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
@@ -22,21 +22,29 @@
         .alert-error { background: #fdecea; color: #c62828; border: 1px solid #f5c6c6; border-radius: 4px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.9rem; }
         .divider { border-top: 1px solid #eee; margin: 1.5rem 0; }
         .footer-note { font-size: 0.8rem; color: #999; }
+        .footer-note a { color: #4a90e2; text-decoration: none; }
+        .lang-switcher { text-align: center; margin-bottom: 1.2rem; font-size: 0.82rem; }
+        .lang-switcher a { color: #4a90e2; text-decoration: none; margin: 0 0.3rem; }
+        .lang-switcher a:hover { text-decoration: underline; }
+        .lang-switcher span { color: #bbb; margin: 0 0.15rem; }
     </style>
 </head>
 <body>
 <div class="card">
-    <h1>User Login</h1>
-    <p class="subtitle">Sign in with your social account</p>
+    <h1 th:text="#{user.login.heading}">User Login</h1>
+    <p class="subtitle" th:text="#{user.login.subtitle}">Sign in with your social account</p>
 
-    <div class="alert-error" th:if="${param.error}">
-        Login failed. Please try again.
-    </div>
-    <div class="alert-error" th:if="${param.oauth_failed}">
-        OAuth2 login failed. Please try again.
+    <div class="lang-switcher">
+        <a th:href="@{/app/user/login(lang=en)}"    th:text="#{common.lang.en}">English</a>
+        <span>|</span>
+        <a th:href="@{/app/user/login(lang=zh_TW)}" th:text="#{common.lang.zh_TW}">繁體中文</a>
+        <span>|</span>
+        <a th:href="@{/app/user/login(lang=ja)}"    th:text="#{common.lang.ja}">日本語</a>
     </div>
 
-    <!-- Google OAuth2 — GET redirect, no CSRF needed -->
+    <div class="alert-error" th:if="${param.error}"        th:text="#{user.login.error}"></div>
+    <div class="alert-error" th:if="${param.oauth_failed}" th:text="#{user.login.oauth.error}"></div>
+
     <a th:href="${googleOAuthUrl}" class="oauth-btn btn-google">
         <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
             <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
@@ -44,25 +52,28 @@
             <path d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
             <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
         </svg>
-        Continue with Google
+        <span th:text="#{user.login.google}">Continue with Google</span>
     </a>
 
     <a th:href="${lineOAuthUrl}" class="oauth-btn btn-line">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
             <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
         </svg>
-        Continue with LINE
+        <span th:text="#{user.login.line}">Continue with LINE</span>
     </a>
 
     <a th:href="${githubOAuthUrl}" class="oauth-btn btn-github">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
         </svg>
-        Continue with GitHub
+        <span th:text="#{user.login.github}">Continue with GitHub</span>
     </a>
 
     <div class="divider"></div>
-    <p class="footer-note">Are you a merchant? <a href="/app/merchant/login" style="color:#4a90e2;text-decoration:none;">Sign in here</a></p>
+    <p class="footer-note">
+        <span th:text="#{user.login.merchant}">Are you a merchant?</span>
+        <a href="/app/merchant/login" th:text="#{user.login.merchant.link}">Merchant Login</a>
+    </p>
 </div>
 </body>
 </html>

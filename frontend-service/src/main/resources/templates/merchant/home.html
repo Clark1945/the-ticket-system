@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Merchant Home - Ticket System</title>
+    <title th:text="#{merchant.home.title}">Merchant Home - Ticket System</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; min-height: 100vh; }
         header { background: #4a90e2; color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
         header h1 { font-size: 1.3rem; }
+        .header-right { display: flex; align-items: center; gap: 1.5rem; }
         .logout-btn {
             padding: 0.4rem 1rem; background: rgba(255,255,255,0.2); color: #fff;
             border: 1px solid rgba(255,255,255,0.5); border-radius: 4px; font-size: 0.9rem;
             cursor: pointer;
         }
         .logout-btn:hover { background: rgba(255,255,255,0.35); }
+        .lang-switcher { font-size: 0.82rem; }
+        .lang-switcher a { color: rgba(255,255,255,0.85); text-decoration: none; margin: 0 0.3rem; }
+        .lang-switcher a:hover { color: #fff; text-decoration: underline; }
+        .lang-switcher span { color: rgba(255,255,255,0.4); margin: 0 0.1rem; }
         main { max-width: 800px; margin: 3rem auto; padding: 0 1rem; }
         .welcome-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 2rem; }
         .welcome-card h2 { font-size: 1.5rem; color: #333; margin-bottom: 0.5rem; }
@@ -27,25 +32,37 @@
 <body>
 
 <header>
-    <h1>Ticket System &mdash; Merchant Portal</h1>
-    <form th:action="@{/app/merchant/logout}" method="post">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-        <button type="submit" class="logout-btn">Logout</button>
-    </form>
+    <h1 th:text="#{merchant.home.header}">Ticket System — Merchant Portal</h1>
+    <div class="header-right">
+        <div class="lang-switcher">
+            <a th:href="@{/app/merchant/home(lang=en)}"    th:text="#{common.lang.en}">English</a>
+            <span>|</span>
+            <a th:href="@{/app/merchant/home(lang=zh_TW)}" th:text="#{common.lang.zh_TW}">繁體中文</a>
+            <span>|</span>
+            <a th:href="@{/app/merchant/home(lang=ja)}"    th:text="#{common.lang.ja}">日本語</a>
+        </div>
+        <form th:action="@{/app/merchant/logout}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="logout-btn" th:text="#{merchant.home.logout}">Logout</button>
+        </form>
+    </div>
 </header>
 
 <main>
     <div class="welcome-card">
-        <h2>Welcome back, <span th:text="${actorName}">Merchant</span>!</h2>
-        <p>You are logged in to the Merchant Portal.</p>
+        <h2>
+            <span th:text="#{merchant.home.welcome}">Welcome back,</span>
+            <span th:text="${actorName}">Merchant</span>!
+        </h2>
+        <p th:text="#{merchant.home.logged.in}">You are logged in to the Merchant Portal.</p>
         <div class="info-row">
             <div class="info-item">
-                <label>Email</label>
+                <label th:text="#{merchant.home.email}">Email</label>
                 <span th:text="${email}">merchant@example.com</span>
             </div>
             <div class="info-item">
-                <label>Role</label>
-                <span>Merchant</span>
+                <label th:text="#{merchant.home.role}">Role</label>
+                <span th:text="#{merchant.home.role.value}">Merchant</span>
             </div>
         </div>
     </div>

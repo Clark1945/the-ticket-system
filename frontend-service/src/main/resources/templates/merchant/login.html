@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Merchant Login - Ticket System</title>
+    <title th:text="#{merchant.login.title}">Merchant Login - Ticket System</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
@@ -25,39 +25,50 @@
         .footer-link { text-align: center; margin-top: 1rem; font-size: 0.9rem; color: #666; }
         .footer-link a { color: #4a90e2; text-decoration: none; }
         .logo { display: block; margin: 0 auto 1.2rem; width: 40%; height: 20%; object-fit: contain; }
+        .lang-switcher { text-align: center; margin-bottom: 1.2rem; font-size: 0.82rem; }
+        .lang-switcher a { color: #4a90e2; text-decoration: none; margin: 0 0.3rem; }
+        .lang-switcher a:hover { text-decoration: underline; }
+        .lang-switcher span { color: #bbb; margin: 0 0.15rem; }
     </style>
 </head>
 <body>
 <div class="card">
     <img class="logo" th:src="@{/images/icon.png}" alt="Logo" />
-    <h1>Merchant Portal</h1>
+    <h1 th:text="#{merchant.login.heading}">Merchant Portal</h1>
 
-    <div class="alert-success" th:if="${param.registered}">
-        Registration successful! Please sign in to continue.
+    <div class="lang-switcher">
+        <a th:href="@{/app/merchant/login(lang=en)}"   th:text="#{common.lang.en}">English</a>
+        <span>|</span>
+        <a th:href="@{/app/merchant/login(lang=zh_TW)}" th:text="#{common.lang.zh_TW}">繁體中文</a>
+        <span>|</span>
+        <a th:href="@{/app/merchant/login(lang=ja)}"   th:text="#{common.lang.ja}">日本語</a>
     </div>
-    <div class="alert-error" th:if="${error}" th:text="${error}"></div>
-    <div class="alert-error" th:if="${param.error}">
-        Invalid credentials. Please try again.
-    </div>
+
+    <div class="alert-success" th:if="${param.registered}" th:text="#{merchant.login.registered}"></div>
+    <div class="alert-error"   th:if="${error}"            th:text="${error}"></div>
+    <div class="alert-error"   th:if="${param.error}"      th:text="#{merchant.login.error.invalid}"></div>
 
     <form th:action="@{/app/merchant/login}" method="post">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
         <div class="form-group">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" placeholder="merchant@example.com" required autofocus />
+            <label for="email" th:text="#{merchant.login.email}">Email Address</label>
+            <input type="email" id="email" name="email"
+                   th:placeholder="#{merchant.login.email.placeholder}" required autofocus />
         </div>
 
         <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Your password" required />
+            <label for="password" th:text="#{merchant.login.password}">Password</label>
+            <input type="password" id="password" name="password"
+                   th:placeholder="#{merchant.login.password.placeholder}" required />
         </div>
 
-        <button type="submit">Sign In</button>
+        <button type="submit" th:text="#{merchant.login.submit}">Sign In</button>
     </form>
 
     <div class="footer-link">
-        New merchant? <a href="/app/merchant/register">Create an account</a>
+        <span th:text="#{merchant.login.no.account}">New merchant?</span>
+        <a href="/app/merchant/register" th:text="#{merchant.login.create.account}">Create an account</a>
     </div>
 </div>
 </body>

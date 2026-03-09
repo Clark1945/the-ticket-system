@@ -51,8 +51,8 @@ public class PageGuardInterceptor implements HandlerInterceptor {
                 return false;
             }
 
-            // A USER tries to access any merchant page → merchant login
-            if (loggedIn && session.isUser()) {
+            // A USER tries to access a protected merchant page → merchant login
+            if (loggedIn && session.isUser() && !isMerchantPublic) {
                 response.sendRedirect("/app/merchant/login");
                 return false;
             }
@@ -92,8 +92,8 @@ public class PageGuardInterceptor implements HandlerInterceptor {
                 return false;
             }
 
-            // A MERCHANT tries to access any user page → user login
-            if (loggedIn && session.isMerchant()) {
+            // A MERCHANT tries to access a protected user page → user login
+            if (loggedIn && session.isMerchant() && !isUserPublic) {
                 response.sendRedirect("/app/user/login");
                 return false;
             }

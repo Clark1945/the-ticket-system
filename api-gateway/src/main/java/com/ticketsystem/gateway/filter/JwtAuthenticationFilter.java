@@ -3,6 +3,7 @@ package com.ticketsystem.gateway.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ticketsystem.gateway.model.ErrorResponse;
 import com.ticketsystem.gateway.service.JwtService;
+import com.ticketsystem.gateway.service.JwtService.TokenStatus;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,13 +15,16 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -32,17 +36,17 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     private final JwtService jwtService;
     private final ReactiveStringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
+    private final WebClient.Builder webClientBuilder;
 
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
-    // method name → ant path patterns that skip JWT verification
     private static final Map<String, List<String>> WHITELIST = Map.of(
             "POST", List.of(
                     "/auth/merchant/register",
                     "/auth/merchant/login",
                     "/auth/merchant/otp/resend",
                     "/auth/merchant/email-verify/**",
-                    "/auth/token/refresh",   // refresh_token is used here, not access_token
+                    "/auth/token/refresh",
                     "/app/merchant/register",
                     "/app/merchant/login",
                     "/app/merchant/email-verify/**",
@@ -68,34 +72,98 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
-        String token = extractCookie(request, "access_token");
-        if (token == null) {
-            return writeError(exchange, HttpStatus.UNAUTHORIZED,
-                    "TOKEN_INVALID", "Missing or invalid token");
+        String accessToken = extractCookie(request, "access_token");
+        TokenStatus status = accessToken != null
+                ? jwtService.getTokenStatus(accessToken)
+                : TokenStatus.INVALID;
+
+        if (status == TokenStatus.VALID) {
+            return processValidToken(exchange, chain, accessToken);
         }
 
+        if (status == TokenStatus.EXPIRED) {
+            String refreshToken = extractCookie(request, "refresh_token");
+            if (refreshToken != null) {
+                return attemptRefresh(exchange, chain, refreshToken, request.getPath().value());
+            }
+        }
+
+        // token missing, invalid, or expired with no refresh_token
+        return redirectToLogin(exchange, request.getPath().value());
+    }
+
+    private Mono<Void> processValidToken(ServerWebExchange exchange, GatewayFilterChain chain,
+                                          String token) {
         return redisTemplate.hasKey("blacklist:" + token)
                 .flatMap(blacklisted -> {
                     if (Boolean.TRUE.equals(blacklisted)) {
-                        return writeError(exchange, HttpStatus.UNAUTHORIZED,
-                                "TOKEN_INVALID", "Token has been revoked");
+                        return redirectToLogin(exchange, exchange.getRequest().getPath().value());
                     }
                     try {
                         Claims claims = jwtService.validateAndParseClaims(token);
-                        String actorId = jwtService.getActorId(claims);
-                        String actorType = jwtService.getActorType(claims);
-
-                        ServerHttpRequest mutated = request.mutate()
-                                .header("X-Actor-Id", actorId)
-                                .header("X-Actor-Type", actorType)
+                        ServerHttpRequest mutated = exchange.getRequest().mutate()
+                                .header("X-Actor-Id", jwtService.getActorId(claims))
+                                .header("X-Actor-Type", jwtService.getActorType(claims))
                                 .build();
-
                         return chain.filter(exchange.mutate().request(mutated).build());
                     } catch (Exception e) {
-                        return writeError(exchange, HttpStatus.UNAUTHORIZED,
-                                "TOKEN_INVALID", "Invalid or expired token");
+                        return redirectToLogin(exchange, exchange.getRequest().getPath().value());
                     }
                 });
+    }
+
+    private Mono<Void> attemptRefresh(ServerWebExchange exchange, GatewayFilterChain chain,
+                                       String refreshToken, String originalPath) {
+        return webClientBuilder.build()
+                .post()
+                .uri("http://localhost:8081/auth/token/refresh")
+                .cookie("refresh_token", refreshToken)
+                .retrieve()
+                .toBodilessEntity()
+                .flatMap(response -> {
+                    // Forward new cookies to browser
+                    List<String> setCookieHeaders = response.getHeaders().get("Set-Cookie");
+                    if (setCookieHeaders != null) {
+                        setCookieHeaders.forEach(c ->
+                                exchange.getResponse().getHeaders().add("Set-Cookie", c));
+                    }
+
+                    // Extract new access_token to continue current request
+                    String newAccessToken = extractTokenFromSetCookie(setCookieHeaders);
+                    if (newAccessToken == null) {
+                        return redirectToLogin(exchange, originalPath);
+                    }
+
+                    try {
+                        Claims claims = jwtService.validateAndParseClaims(newAccessToken);
+                        ServerHttpRequest mutated = exchange.getRequest().mutate()
+                                .header("X-Actor-Id", jwtService.getActorId(claims))
+                                .header("X-Actor-Type", jwtService.getActorType(claims))
+                                .build();
+                        log.info("Token refreshed transparently for path: {}", originalPath);
+                        return chain.filter(exchange.mutate().request(mutated).build());
+                    } catch (Exception e) {
+                        return redirectToLogin(exchange, originalPath);
+                    }
+                })
+                .onErrorResume(e -> {
+                    log.warn("Token refresh failed: {}", e.getMessage());
+                    return redirectToLogin(exchange, originalPath);
+                });
+    }
+
+    private Mono<Void> redirectToLogin(ServerWebExchange exchange, String path) {
+        // API paths return JSON 401
+        if (path.startsWith("/auth/")) {
+            return writeError(exchange, HttpStatus.UNAUTHORIZED,
+                    "TOKEN_INVALID", "Missing or invalid token");
+        }
+        // Frontend paths redirect to appropriate login page
+        String loginUrl = path.startsWith("/app/user/") ? "/app/user/login" : "/app/merchant/login";
+        ServerHttpResponse response = exchange.getResponse();
+        response.setStatusCode(HttpStatus.FOUND);
+        response.getHeaders().setLocation(URI.create(loginUrl));
+        return response.setComplete();
     }
 
     @Override
@@ -115,6 +183,16 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         List<HttpCookie> cookies = request.getCookies().get(name);
         if (cookies == null || cookies.isEmpty()) return null;
         return cookies.get(0).getValue();
+    }
+
+    private String extractTokenFromSetCookie(List<String> setCookieHeaders) {
+        if (setCookieHeaders == null) return null;
+        for (String header : setCookieHeaders) {
+            if (header.startsWith("access_token=")) {
+                return header.split(";")[0].substring("access_token=".length());
+            }
+        }
+        return null;
     }
 
     private Mono<Void> writeError(ServerWebExchange exchange, HttpStatus status,

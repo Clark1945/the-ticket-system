@@ -56,6 +56,31 @@ GET  /auth/oauth2/{provider}/callback
 - ZSET Value: request_id
 - LRU mechanism while Redis Rate Limiting
 
+## Installation guide
+### Windows
+1. docker compose up -d
+2. Copy-Item D:\Code\claude_all\the-ticket-system\auth-service\.env.example `
+  D:\Code\claude_all\the-ticket-system\auth-service\.env
+3. Copy-Item D:\Code\claude_all\the-ticket-system\api-gateway\.env.example `
+  D:\Code\claude_all\the-ticket-system\api-gateway\.env
+4. cd D:\Code\claude_all\the-ticket-system\auth-service
+.\mvnw.cmd spring-boot:run
+5. cd D:\Code\claude_all\the-ticket-system\api-gateway
+.\mvnw.cmd spring-boot:run
+6. cd D:\Code\claude_all\the-ticket-system\frontend-service
+.\mvnw.cmd spring-boot:run
+
+### Linux
+1. docker compose up -d
+2. cp auth-service/.env.example auth-service/.env
+3. cp api-gateway/.env.example api-gateway/.env
+4. cd D:\Code\claude_all\the-ticket-system\auth-service
+.\mvnw.cmd spring-boot:run
+5. cd D:\Code\claude_all\the-ticket-system\api-gateway
+.\mvnw.cmd spring-boot:run
+6. cd D:\Code\claude_all\the-ticket-system\frontend-service
+.\mvnw.cmd spring-boot:run
+
 ## Future Improvements
 - Circuit Breaker (Resilience4j)
 - API Versioning (/v1/**)

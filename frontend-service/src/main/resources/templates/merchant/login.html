@@ -24,11 +24,13 @@
         .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; border-radius: 4px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.9rem; }
         .footer-link { text-align: center; margin-top: 1rem; font-size: 0.9rem; color: #666; }
         .footer-link a { color: #4a90e2; text-decoration: none; }
+        .logo { display: block; margin: 0 auto 1.2rem; width: 40%; height: 20%; object-fit: contain; }
     </style>
 </head>
 <body>
 <div class="card">
-    <h1>Merchant Sign In</h1>
+    <img class="logo" th:src="@{/images/icon.png}" alt="Logo" />
+    <h1>Merchant Portal</h1>
 
     <div class="alert-success" th:if="${param.registered}">
         Registration successful! Please sign in to continue.
@@ -51,7 +53,7 @@
             <input type="password" id="password" name="password" placeholder="Your password" required />
         </div>
 
-        <button type="submit">Sign In &amp; Send OTP</button>
+        <button type="submit">Sign In</button>
     </form>
 
     <div class="footer-link">

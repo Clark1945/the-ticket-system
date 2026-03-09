@@ -42,10 +42,21 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                     "/auth/merchant/login",
                     "/auth/merchant/otp/resend",
                     "/auth/merchant/email-verify/**",
-                    "/auth/token/refresh"   // refresh_token is used here, not access_token
+                    "/auth/token/refresh",   // refresh_token is used here, not access_token
+                    "/app/merchant/register",
+                    "/app/merchant/login",
+                    "/app/merchant/email-verify/**",
+                    "/app/merchant/otp/resend",
+                    "/app/user/login"
             ),
             "GET", List.of(
-                    "/auth/oauth2/**"
+                    "/auth/oauth2/**",
+                    "/app/merchant/login",
+                    "/app/merchant/register",
+                    "/app/merchant/email-verify",
+                    "/app/user/login",
+                    "/app/oauth2/callback",
+                    "/images/**"
             )
     );
 

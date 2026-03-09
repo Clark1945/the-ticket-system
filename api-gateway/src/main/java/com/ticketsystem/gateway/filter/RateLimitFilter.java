@@ -63,10 +63,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         String requestId = now + ":" + UUID.randomUUID();
 
         return redisTemplate.execute(RATE_LIMIT_SCRIPT, List.of(key),
-                        String.valueOf(now),
-                        String.valueOf(windowMs),
-                        String.valueOf(maxRequests),
-                        requestId)
+                        List.of(String.valueOf(now), String.valueOf(windowMs), String.valueOf(maxRequests), requestId))
                 .next()
                 .defaultIfEmpty(0L)
                 .onErrorReturn(1L)  // fail-open: allow request if Redis is unavailable

@@ -1,0 +1,27 @@
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /logs/api-gateway/api-calls.log           # current day log
+      - /logs/api-gateway/api-calls.*.log         # rotated logs
+    json.keys_under_root: true                    # parse JSON directly into the event
+    json.add_error_key: true                      # add error field if JSON parse fails
+    fields:
+      service: api-gateway
+      environment: local
+    fields_under_root: true
+
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  index: "api-gateway-logs-%{+yyyy.MM.dd}"        # daily index, e.g. api-gateway-logs-2026.03.14
+  data_stream.enabled: false                       # use regular index, not data stream (avoids ECS type conflicts)
+
+setup.template.enabled: false                     # using custom index template defined in Elasticsearch
+
+setup.ilm.enabled: false                          # disable ILM for simplicity in local dev
+
+setup.kibana:
+  host: "kibana:5601"
+
+# Reduce noise in filebeat's own logs
+logging.level: warning

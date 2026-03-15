@@ -7,6 +7,7 @@ import com.ticketsystem.gateway.service.JwtService.TokenStatus;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -35,6 +36,9 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     private final ReactiveStringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
     private final WebClient.Builder webClientBuilder;
+
+    @Value("${app.services.auth-url}")
+    private String authServiceUrl;
 
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
@@ -104,7 +108,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                                        String refreshToken, String originalPath) {
         return webClientBuilder.build()
                 .post()
-                .uri("http://localhost:8081/auth/token/refresh")
+                .uri(authServiceUrl + "/auth/token/refresh")
                 .cookie("refresh_token", refreshToken)
                 .retrieve()
                 .toBodilessEntity()

@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 public class AuthClientService {
 
     private final WebClient webClient;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     // ------------------------------------------------------------------ //
     //  /auth/me

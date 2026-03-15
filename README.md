@@ -6,13 +6,16 @@ A microservices-based ticket management platform built with Spring Boot 3 and Sp
 
 ```
 Browser
-  │
-  ▼
-API Gateway (8080)   ← JWT verification, Rate Limiting, Request Logging
-  ├──/auth/**──────► Auth Service (8081)   ← Merchant & User Authentication
-  └──/app/**───────► Frontend BFF (8090)  ← Thymeleaf SSR, Session Management
-                             │
-                             └──────────► Ticket Service (8082) [coming soon]
+  ├──────────────────────────────────────────────────────────────────────────────────────┐
+  │                                                                                      ▼
+  │                                                                        Frontend BFF (8090)  ← Thymeleaf SSR, Session Management
+  │                                                                                      │
+  ▼                                                                                      │
+API Gateway (8080)   ← JWT verification, Rate Limiting, Request Logging  ◄──────────────┤
+  │                                                                                      │
+  └──/auth/**──────► Auth Service (8081)   ← Merchant & User Authentication              │
+                             │                                                            │
+                             └──────────► Ticket Service (8082) [coming soon]  ◄────────┘
 ```
 
 ## Services
@@ -30,7 +33,7 @@ API Gateway (8080)   ← JWT verification, Rate Limiting, Request Logging
 - **Database** — PostgreSQL (Flyway migrations)
 - **Cache / Session** — Redis
 - **Auth** — JWT (HttpOnly cookies), OAuth2, BCrypt, Email OTP (Gmail SMTP)
-- **Logging** — ELK Stack (Elasticsearch + Logstash + Kibana)
+- **Logging** — ELK Stack (Elasticsearch + Filebeat + Kibana)
 - **Template Engine** — Thymeleaf (SSR)
 
 ## Authentication Flows
@@ -78,10 +81,18 @@ GET /auth/oauth2/{provider}  (provider: google | line | github)
 ### 1. Start infrastructure
 
 ```bash
+cd auth-service
 docker compose up -d
 ```
 
-This starts PostgreSQL, Redis, and the ELK stack.
+This starts PostgreSQL and Redis.
+
+To start the ELK stack (optional, for log monitoring):
+
+```bash
+# Run from project root
+docker compose -f docker-compose.elk.yml up -d
+```
 
 ### 2. Configure environment variables
 
@@ -139,11 +150,11 @@ cd frontend-service
 
 | URL | Description |
 |-----|-------------|
-| http://localhost:8080/app/merchant/register | Merchant registration |
-| http://localhost:8080/app/merchant/login | Merchant login |
-| http://localhost:8080/app/user/login | User login (OAuth2) |
+| http://localhost:8090/app/merchant/register | Merchant registration |
+| http://localhost:8090/app/merchant/login | Merchant login |
+| http://localhost:8090/app/user/login | User login (OAuth2) |
 
-> All traffic goes through the API Gateway on port 8080.
+> Browser accesses the Frontend BFF directly on port 8090. The BFF communicates with Auth Service via the API Gateway (8080).
 
 ## Project Structure
 
@@ -154,6 +165,7 @@ the-ticket-system/
 │       ├── filter/       # JWT auth, rate limit, request logging
 │       └── service/      # JWT parsing
 ├── auth-service/         # Authentication & Authorization
+│   ├── docker-compose.yml    # PostgreSQL + Redis
 │   └── src/main/java/com/ticketsystem/auth/
 │       ├── controller/   # Merchant, User, Common, Me endpoints
 │       ├── service/      # Auth logic, JWT, OTP, Email
@@ -164,7 +176,7 @@ the-ticket-system/
 │       ├── controller/   # Page controllers
 │       ├── interceptor/  # PageGuardInterceptor (auth/role/redirect)
 │       └── service/      # AuthClientService, SessionService
-└── docker-compose.yml    # PostgreSQL + Redis + ELK
+└── docker-compose.elk.yml    # ELK Stack (Elasticsearch + Filebeat + Kibana)
 ```
 
 ## API Reference
@@ -178,7 +190,7 @@ the-ticket-system/
 | POST | `/auth/merchant/email-verify/{action}` | Public | Verify OTP (`REGISTER` or `LOGIN`) |
 | POST | `/auth/merchant/otp/resend` | Public | Resend OTP |
 | GET | `/auth/oauth2/{provider}` | Public | Start OAuth2 login |
-| GET | `/auth/me` | Cookie | Get current actor info |
+| GET | `/auth/me` | Public (Gateway) / Cookie (Auth Service) | Get current actor info |
 | POST | `/auth/token/refresh` | Cookie | Refresh access token |
 | POST | `/auth/logout` | Cookie | Logout and blacklist token |
 
@@ -193,6 +205,41 @@ the-ticket-system/
 | GET | `/app/user/login` | User login page |
 | GET | `/app/user/home` | User home (protected) |
 | GET | `/app/oauth2/callback` | OAuth2 callback handler |
+
+## Running Tests
+
+### auth-service
+
+測試使用 `@WebMvcTest`（不需要啟動 Docker、Redis 或 PostgreSQL）。
+
+```bash
+cd auth-service
+
+# 執行所有測試
+./mvnw test           # Linux/macOS
+.\mvnw.cmd test       # Windows
+
+# 執行單一測試類別
+.\mvnw.cmd test -Dtest=MerchantAuthControllerTest
+
+# 執行單一測試方法
+.\mvnw.cmd test -Dtest=MerchantAuthControllerTest#register_success
+```
+
+| Test Class | Coverage |
+|------------|----------|
+| `MerchantAuthControllerTest` | Register, Login, Email OTP verify, OTP resend |
+| `MeControllerTest` | GET /auth/me |
+| `CommonAuthControllerTest` | Logout, Token refresh |
+
+### api-gateway / frontend-service
+
+目前只有基本的 smoke test（context load）。
+
+```bash
+cd api-gateway && .\mvnw.cmd test
+cd frontend-service && .\mvnw.cmd test
+```
 
 ## Database Schema
 

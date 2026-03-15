@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn dependency:tree:*)",
+      "Bash(mvn test:*)",
+      "Bash(curl:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker exec:*)"
+    ]
+  }
+}
